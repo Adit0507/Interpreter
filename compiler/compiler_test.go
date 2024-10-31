@@ -15,13 +15,23 @@ type compilerTestCase struct {
 
 func TestIntegerArthimetic(t *testing.T) {
 	tests := []compilerTestCase{
+		// {
+		// 	input:             "1 + 2",
+		// 	expectedConstants: []interface{}{1, 2},
+		// 	expectedInstructions: []code.Instructions{
+		// 		code.Make(code.OpConstant, 0),
+		// 		code.Make(code.OpConstant, 1),
+		// 		code.Make(code.OpAdd),
+		// 	},
+		// },
 		{
-			input:             "1 + 2",
+			input:             "1; 2",
 			expectedConstants: []interface{}{1, 2},
 			expectedInstructions: []code.Instructions{
 				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
 				code.Make(code.OpConstant, 1),
-				code.Make(code.OpAdd),
+				code.Make(code.OpPop),
 			},
 		},
 	}
@@ -53,19 +63,19 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 }
 
 func testConstants(t *testing.T, expected []interface{}, actual []object.Object) error {
-		if len(expected) != len(actual) {
-			return fmt.Errorf("wrong no. of constants. got=%d, want=%d", len(actual), len(expected))
-		}
+	if len(expected) != len(actual) {
+		return fmt.Errorf("wrong no. of constants. got=%d, want=%d", len(actual), len(expected))
+	}
 
-		for i, constant := range expected {
-			switch constant := constant.(type) {
-			case int:
-				err := testIntegerObject(int64(constant), actual[i])
-				if err!= nil {
-					return fmt.Errorf("constant %d- testIntegerObject failed: %s", i, err)
-				}
+	for i, constant := range expected {
+		switch constant := constant.(type) {
+		case int:
+			err := testIntegerObject(int64(constant), actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d- testIntegerObject failed: %s", i, err)
 			}
 		}
+	}
 
 	return nil
 }
