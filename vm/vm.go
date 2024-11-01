@@ -9,6 +9,9 @@ import (
 
 const StackSize = 2048
 
+var True = &object.Boolean{Value: true}
+var False = &object.Boolean{Value: false}
+
 type VM struct {
 	constants    []object.Object
 	instructions code.Instructions
@@ -63,6 +66,19 @@ func (vm *VM) Run() error {
 		// 	res := rightValue + leftValue
 		// 	vm.push(&object.Integer{Value: res})
 
+		case code.OpTrue:
+			err := vm.push(True)
+			if err != nil {
+				return err
+			}
+
+		case code.OpFalse:
+			err := vm.push(False)
+			if err != nil {
+				return err
+			}
+
+
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			err := vm.executeBinaryOperation(op)
 			if err != nil {
@@ -103,7 +119,7 @@ func (vm *VM) executeBinaryIntegerOperation(op code.OpCode, left, right object.O
 		res = lValue * rValue
 	case code.OpDiv:
 		res = lValue / rValue
-		
+
 	default:
 		return fmt.Errorf("unknowm integer operator: %d", op)
 	}
