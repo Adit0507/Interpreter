@@ -23,7 +23,7 @@ type VM struct {
 	globals      []object.Object
 }
 
-func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM{
+func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
 	vm := New(bytecode)
 	vm.globals = s
 	return vm
@@ -89,12 +89,11 @@ func (vm *VM) Run() error {
 		case code.OpGetGlobal:
 			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
 			ip += 2
-	
+
 			err := vm.push(vm.globals[globalIndex])
 			if err != nil {
 				return err
 			}
-
 
 		case code.OpTrue:
 			err := vm.push(True)
@@ -238,11 +237,27 @@ func (vm *VM) executeBinaryOperation(op code.OpCode) error {
 	leftType := left.Type()
 	rightType := right.Type()
 
-	if leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ {
+	switch {
+	case leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ:
 		return vm.executeBinaryIntegerOperation(op, left, right)
+
+	case leftType == object.STRING_OBJ && rightType == object.STRING_OBJ:
+		return vm.executeBinaryStringOperation(op, left, right)
+
+	default:
+		return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
+	}
+}
+
+func (vm *VM) executeBinaryStringOperation(op code.OpCode, left, right object.Object) error {
+	if op != code.OpAdd {
+		return fmt.Errorf("unknown string operator: %d", op)
 	}
 
-	return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
+	leftValue := left.(*object.String).Value
+	rightValue := right.(*object.String).Value
+
+	return vm.push(&object.String{Value: leftValue + rightValue})
 }
 
 func (vm *VM) executeBinaryIntegerOperation(op code.OpCode, left, right object.Object) error {
