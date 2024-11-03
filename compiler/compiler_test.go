@@ -13,6 +13,49 @@ type compilerTestCase struct {
 	expectedInstructions []code.Instructions
 }
 
+func TestArrayLiterals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             "[]",
+			expectedConstants: []interface{}{},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpArray, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "[1, 2, 3]",
+			expectedConstants: []interface{}{1, 2, 3},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpArray, 3),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "[1 + 2, 3 - 4, 5 * 6]",
+			expectedConstants: []interface{}{1, 2, 3, 4, 5, 6},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpSub),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpConstant, 5),
+				code.Make(code.OpMul),
+				code.Make(code.OpArray, 3),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func TestStringExpressions(t *testing.T) {
 	tests := []compilerTestCase{
 		{
@@ -301,7 +344,7 @@ func testConstants(t *testing.T, expected []interface{}, actual []object.Object)
 			if err != nil {
 				return fmt.Errorf("constant %d- testIntegerObject failed: %s", i, err)
 			}
-		
+
 		case string:
 			err := testStringObject(constant, actual[i])
 			if err != nil {
@@ -313,15 +356,15 @@ func testConstants(t *testing.T, expected []interface{}, actual []object.Object)
 	return nil
 }
 
-func testStringObject(expected string, actual object.Object) error{
+func testStringObject(expected string, actual object.Object) error {
 	res, ok := actual.(*object.String)
 	if !ok {
 		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
 	}
-	if res.Value != expected{
+	if res.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%q, want=%q", res.Value, expected)
 	}
-	
+
 	return nil
 }
 

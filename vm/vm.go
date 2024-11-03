@@ -51,6 +51,15 @@ func (vm *VM) StackTop() object.Object {
 	return vm.stack[vm.sp-1]
 }
 
+func (vm *VM) buildArray(startIndex, endIndex int) object.Object {
+	elems := make([]object.Object, endIndex - startIndex)
+	for i := startIndex; i < endIndex; i++ {
+		elems[i - startIndex] = vm.stack[i]
+	}
+
+	return &object.Array{Elements: elems}
+}
+
 // turns VM into a virtual machine
 func (vm *VM) Run() error {
 	for ip := 0; ip < len(vm.instructions); ip++ {
@@ -62,6 +71,16 @@ func (vm *VM) Run() error {
 			ip += 2
 
 			err := vm.push(vm.constants[constIndex])
+			if err != nil {
+				return err
+			}
+
+		case code.OpArray:
+			numElems:= int(code.ReadUint16(vm.instructions[ip +1:]))
+			ip += 2
+			array := vm.buildArray(vm.sp - numElems, vm.sp)
+			vm.sp = vm.sp - numElems
+			err := vm.push(array)
 			if err != nil {
 				return err
 			}
