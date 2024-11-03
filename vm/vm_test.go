@@ -40,6 +40,30 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 	t.Helper()
 
 	switch expected := expected.(type) {
+	case map[object.HashKey]int64:
+		hash, ok := actual.(*object.Hash)
+		if !ok {
+			t.Errorf("object is not Hash. got=%T want=%T", actual, actual)
+			return
+		}
+
+		if len(hash.Pairs) != len(expected) {
+			t.Errorf("hash has wrong number of Pairs. want=%d got=%d", len(expected), len(hash.Pairs))
+			return
+		}
+
+		for expectedKey, expectedValue := range expected {
+			pair, ok := hash.Pairs[expectedKey]
+			if !ok {
+				t.Errorf("no pair for given key in Pairs")
+			}
+
+			err := testIntegerObject(expectedValue, pair.Value)
+			if err != nil {
+				t.Errorf("testIntegerObject failed: %s", err)
+			}
+		}
+
 	case []int:
 		array, ok := actual.(*object.Array)
 		if !ok {
@@ -50,7 +74,7 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 			return
 		}
 
-		for i, expectedElem := range expected{
+		for i, expectedElem := range expected {
 			err := testIntegerObject(int64(expectedElem), array.Elements[i])
 			if err != nil {
 				t.Errorf("testIntegerObject failed: %s", err)
@@ -104,6 +128,30 @@ func testBooleanObject(expected bool, actual object.Object) error {
 	}
 
 	return nil
+}
+
+func TestHashLiterals(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			"{}", map[object.HashKey]int64{},
+		},
+		{
+			"{1: 2, 2: 3}",
+			map[object.HashKey]int64{
+				(&object.Integer{Value: 1}).HashKey(): 2,
+				(&object.Integer{Value: 2}).HashKey(): 3,
+			},
+		},
+		{
+			"{1 + 1: 2 * 2, 3 + 3: 4 * 4}",
+			map[object.HashKey]int64{
+				(&object.Integer{Value: 2}).HashKey(): 4,
+				(&object.Integer{Value: 6}).HashKey(): 16,
+			},
+		},
+	}
+
+	rumVmTests(t, tests)
 }
 
 func TestArrayLiterals(t *testing.T) {
