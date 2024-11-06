@@ -130,6 +130,57 @@ func testBooleanObject(expected bool, actual object.Object) error {
 	return nil
 }
 
+func TestFunctionsWithReturnStatement(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+			let earlyExit = fn() { return 99; 100; };
+			earlyExit();
+			`,
+			expected: 99,
+		},
+		{
+			input: `
+			let earlyExit = fn() { return 99; return 100; };
+			earlyExit();
+			`,
+			expected: 99,
+		},
+	}
+	rumVmTests(t, tests)
+}
+
+func TestCallingFunctionsWithoutArguments(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+let fivePlusTen = fn() { 5 + 10; };
+fivePlusTen();
+`,
+			expected: 15,
+		},
+		{
+			input: `
+			let one = fn() { 1; };
+			let two = fn() { 2; };
+			one() + two()
+			`,
+			expected: 3,
+		},
+		{
+			input: `
+			let a = fn() { 1 };
+			let b = fn() { a() + 1 };
+			let c = fn() { b() + 1 };
+			c();
+			`,
+			expected: 3,
+		},
+	}
+
+	rumVmTests(t, tests)
+}
+
 func TestIndexExpressions(t *testing.T) {
 	tests := []vmTestCase{
 		{"[1, 2, 3][1]", 2},
