@@ -11,6 +11,8 @@ const StackSize = 2048
 
 const GlobalSize = 65536
 
+const MaxFrames = 1024
+
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
@@ -21,6 +23,20 @@ type VM struct {
 	stack        []object.Object
 	sp           int
 	globals      []object.Object
+	frames       []*Frame
+	framesIndex  int
+}
+
+func (vm *VM) currentFrame() *Frame {
+	return vm.frames[vm.framesIndex-1]
+}
+func (vm *VM) pushFrame(f *Frame) {
+	vm.frames[vm.framesIndex] = f
+	vm.framesIndex++
+}
+func (vm *VM) popFrames() *Frame {
+	vm.framesIndex--
+	return vm.frames[vm.framesIndex]
 }
 
 func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
