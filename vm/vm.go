@@ -249,6 +249,7 @@ func (vm *VM) Run() error {
 				return fmt.Errorf("calling non function")
 			}
 			frame := NewFrame(fn, vm.sp)
+			vm.currentFrame().ip += 1
 			vm.pushFrame(frame)
 			vm.sp = frame.basePointer + fn.NumLocals
 

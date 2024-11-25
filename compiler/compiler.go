@@ -275,6 +275,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+		for _, a := range node.Arguments{
+			err := c.Compile(a)
+			if err != nil {
+				return err
+			}
+		}
+
 		c.emit(code.OpCall)
 
 	case *ast.FunctionLiteral:
